@@ -3,11 +3,15 @@
  *
  * Adds a custom info display and Prev/Next/Reset buttons below the
  * standard widgets. The index auto-increments after each execution.
+ * Supports both BSAI_AssetLibraryAutoList and BSAI_AssetLibraryAutoListByType.
  */
 
 import { app } from "../../../scripts/app.js";
 
-const TARGET_NODE = "BSAI_AssetLibraryAutoList";
+const TARGET_NODES = new Set([
+    "BSAI_AssetLibraryAutoList",
+    "BSAI_AssetLibraryAutoListByType",
+]);
 
 // Extra height needed for custom UI (info line + buttons)
 const EXTRA_UI_HEIGHT = 60; // 24 info + 4 button padding + 24 buttons + 8 bottom padding
@@ -16,7 +20,7 @@ app.registerExtension({
     name: "BSAI.AssetLibraryAutoList",
 
     async beforeRegisterNodeDef(nodeType, nodeData) {
-        if (nodeData.name !== TARGET_NODE) return;
+        if (!TARGET_NODES.has(nodeData.name)) return;
 
         const origOnNodeCreated = nodeType.prototype.onNodeCreated;
         nodeType.prototype.onNodeCreated = function () {
@@ -46,6 +50,7 @@ function setupAutoListNode(node) {
     // Find the widgets
     node._bsai_scriptWidget = node.widgets?.find(w => w.name === "script_text");
     node._bsai_indexWidget = node.widgets?.find(w => w.name === "index");
+    node._bsai_modeWidget = node.widgets?.find(w => w.name === "mode");
 
     // Make sure index starts at 1 if it's NaN
     if (node._bsai_indexWidget) {
@@ -81,6 +86,30 @@ function setupAutoListNode(node) {
         node._bsai_scriptWidget.callback = function (v) {
             if (origCallback) origCallback.call(this, v);
             updateTotal(node);
+            // Reset index to 1 when script changes
+            if (node._bsai_indexWidget) {
+                node._bsai_indexWidget.value = 1;
+                if (node._bsai_indexWidget.callback) {
+                    node._bsai_indexWidget.callback(1);
+                }
+            }
+            node.setDirtyCanvas(true, true);
+        };
+    }
+
+    // Recalculate total when mode changes (for ByType node)
+    if (node._bsai_modeWidget) {
+        const origModeCallback = node._bsai_modeWidget.callback;
+        node._bsai_modeWidget.callback = function (v) {
+            if (origModeCallback) origModeCallback.call(this, v);
+            updateTotal(node);
+            // Reset index to 1 when mode changes
+            if (node._bsai_indexWidget) {
+                node._bsai_indexWidget.value = 1;
+                if (node._bsai_indexWidget.callback) {
+                    node._bsai_indexWidget.callback(1);
+                }
+            }
             node.setDirtyCanvas(true, true);
         };
     }
@@ -98,12 +127,56 @@ function updateTotal(node) {
     if (!state) return;
 
     const scriptText = node._bsai_scriptWidget?.value || "";
-    if (scriptText) {
+    if (!scriptText) {
+        state.total = 0;
+        return;
+    }
+
+    // Count all @图N references in the script
+    // For ByType node with a specific mode, count only matching type
+    const mode = node._bsai_modeWidget?.value || "";
+    const isByType = node._bsai_modeWidget != null;
+
+    if (isByType && mode) {
+        // Parse sections and count by type
+        state.total = countAssetsByMode(scriptText, mode);
+    } else {
+        // Count all @图N in character/prop/scene sections
         const matches = scriptText.match(/@图\d+/g);
         state.total = matches ? matches.length : 0;
-    } else {
-        state.total = 0;
     }
+}
+
+function countAssetsByMode(scriptText, mode) {
+    // Count assets based on the selected mode
+    // mode values match the dropdown options
+    if (mode.includes("仅角色") || mode.includes("Characters")) {
+        return countAssetsInSection(scriptText, "角色档案");
+    } else if (mode.includes("仅道具") || mode.includes("Props")) {
+        return countAssetsInSection(scriptText, "道具档案");
+    } else if (mode.includes("仅场景") || mode.includes("Scenes")) {
+        return countAssetsInSection(scriptText, "场景档案");
+    } else {
+        // Auto mode: count all three sections
+        return (
+            countAssetsInSection(scriptText, "角色档案") +
+            countAssetsInSection(scriptText, "道具档案") +
+            countAssetsInSection(scriptText, "场景档案")
+        );
+    }
+}
+
+function countAssetsInSection(scriptText, sectionName) {
+    const pattern = new RegExp(
+        "\\[" + sectionName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") +
+        "\\][：:]\\s*\\n?(.*?)(?=\\n\\[|$)",
+        "s"
+    );
+    const match = scriptText.match(pattern);
+    if (!match) return 0;
+    const content = match[1];
+    const refs = content.match(/@图\d+/g);
+    return refs ? refs.length : 0;
 }
 
 function drawCustomUI(ctx, node) {
@@ -111,7 +184,6 @@ function drawCustomUI(ctx, node) {
     if (!state) return;
 
     // Calculate position: just below the last widget
-    // We need to find where widgets end
     const widgetY = getWidgetsBottom(node);
     const width = node.size[0];
 
@@ -182,7 +254,6 @@ function drawCustomUI(ctx, node) {
 
 function getWidgetsBottom(node) {
     // Calculate the Y position just below the last widget
-    // Start below title bar
     let y = LiteGraph.NODE_TITLE_HEIGHT + 8;
     for (const w of node.widgets) {
         if (w.name === "asset_list_info" || w.name === "asset_list_buttons") continue;

@@ -17,6 +17,8 @@
   完整文本、描述、资产类型、@图N标签、当前索引、资产总数
 - **Manual Controls | 手动控制** — Prev / Reset / Next buttons at the bottom of the node
   节点底部提供「上一个 / 重置 / 下一个」按钮手动跳转
+- **Type Filter | 按类型筛选** — Second node supports filtering by character / prop / scene, or auto-sequence through all types
+  第二个节点支持按角色/道具/场景筛选，或自动顺序遍历所有类型
 - **Zero Dependencies | 零依赖** — No external node packages required, works out of the box
   无需安装任何额外节点包，开箱即用
 
@@ -63,6 +65,44 @@ Search for "BSAI Asset Library Auto List" in ComfyUI Manager and install it.
 | `asset_tag` | 标签 | STRING | The `@图N` tag (e.g., `@图1`) | `@图N` 标签（如 `@图1`） |
 | `index` | 索引 | INT | Current asset index (1-based) | 当前资产索引（从1开始） |
 | `total` | 总数 | INT | Total number of assets found | 解析到的资产总数 |
+
+---
+
+### BSAI Asset Library By Type | 按类型提取资产
+
+**Category | 分类:** `BSAI / Asset Library`
+
+Extract assets filtered by type. Auto-sequence mode outputs all characters first, then all props, then all scenes.
+按类型筛选提取资产。自动顺序模式先输出所有角色，再输出所有道具，最后输出所有场景。
+
+#### Inputs | 输入
+
+| Name | 名称 | Type | Description | 说明 |
+|------|------|------|-------------|------|
+| `script_text` | 分镜脚本 | STRING (multiline) | BSAI-format storyboard script with `[角色档案]` / `[道具档案]` / `[场景档案]` sections | BSAI 格式分镜脚本，包含角色档案/道具档案/场景档案章节 |
+| `mode` | 输出模式 | COMBO | Output mode: Auto Sequence / Characters Only / Props Only / Scenes Only | 输出模式：自动顺序 / 仅角色 / 仅道具 / 仅场景 |
+| `index` | 索引 | INT | Current asset index within the filtered set (1-based). Auto-increments after each run. | 当前过滤集合内的资产索引，每次运行后自动递增 |
+
+#### Outputs | 输出
+
+| Name | 名称 | Type | Description | 说明 |
+|------|------|------|-------------|------|
+| `text` | 完整文本 | STRING | Complete asset text (name + @图N + description) | 完整资产文本（名称 + @图N标签 + 描述） |
+| `description` | 描述 | STRING | Asset description text (without @图N tag) | 资产描述文本（不含 @图N 标签） |
+| `asset_type` | 类型 | STRING | Asset type: `角色` (Character) / `道具` (Prop) / `场景` (Scene) | 资产类型：角色 / 道具 / 场景 |
+| `asset_tag` | 标签 | STRING | The `@图N` tag (e.g., `@图1`) | `@图N` 标签（如 `@图1`） |
+| `index` | 索引 | INT | Current asset index within filtered set (1-based) | 当前过滤集合内的资产索引（从1开始） |
+| `total` | 总数 | INT | Total number of assets in the filtered set | 过滤后的资产总数 |
+| `mode` | 模式 | STRING | Current output mode (echoed back) | 当前输出模式（回显） |
+
+**Mode Options | 模式选项:**
+
+| Mode | 模式 | Behavior | 行为 |
+|------|------|----------|------|
+| 自动顺序 / Auto Sequence | Default. Outputs all characters → all props → all scenes. Index auto-increments within the full sequence. | 默认。角色全部 → 道具全部 → 场景全部，索引在完整序列中自动递增。 |
+| 仅角色 / Characters Only | Only output assets from [角色档案] section | 只输出角色档案中的资产 |
+| 仅道具 / Props Only | Only output assets from [道具档案] section | 只输出道具档案中的资产 |
+| 仅场景 / Scenes Only | Only output assets from [场景档案] section | 只输出场景档案中的资产 |
 
 ---
 
@@ -146,6 +186,13 @@ The example includes a complete storyboard script with 8 assets (2 characters + 
 ---
 
 ## Changelog | 更新日志
+
+### v1.1.0 (2026-08-24)
+- New node: BSAI Asset Library By Type | 新增节点：按类型提取资产
+- 4 output modes: Auto Sequence / Characters Only / Props Only / Scenes Only | 4种输出模式：自动顺序/仅角色/仅道具/仅场景
+- Auto mode: character → prop → scene sequential output | 自动模式：角色→道具→场景顺序输出
+- Index resets to 1 when script or mode changes | 切换脚本或模式时索引自动重置为1
+- 7th output port: mode (echoes current mode) | 新增第7个输出端口：mode（回显当前模式）
 
 ### v1.0.0 (2026-08-24)
 - Initial release | 首次发布
