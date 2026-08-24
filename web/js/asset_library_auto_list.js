@@ -1,8 +1,8 @@
 /**
  * BSAI Asset Library Auto List - Frontend Extension
  *
- * Adds a custom info display and Prev/Next/Reset buttons below the
- * standard widgets. The index auto-increments after each execution.
+ * Adds a custom info display and Prev/Next/Reset buttons at the bottom of the node.
+ * The index auto-increments after each execution.
  * Supports both BSAI_AssetLibraryAutoList and BSAI_AssetLibraryAutoListByType.
  */
 
@@ -13,8 +13,8 @@ const TARGET_NODES = new Set([
     "BSAI_AssetLibraryAutoListByType",
 ]);
 
-// Extra height needed for custom UI (info line + buttons)
-const EXTRA_UI_HEIGHT = 60; // 24 info + 4 button padding + 24 buttons + 8 bottom padding
+// Extra height needed at bottom for custom UI (info line + buttons + padding)
+const EXTRA_UI_HEIGHT = 56; // 20 info + 24 buttons + 12 padding
 
 app.registerExtension({
     name: "BSAI.AssetLibraryAutoList",
@@ -36,7 +36,7 @@ app.registerExtension({
             this.setDirtyCanvas(true, true);
         };
 
-        // Ensure custom UI area is included in node size
+        // Add extra height at bottom for custom UI
         const origComputeSize = nodeType.prototype.computeSize;
         nodeType.prototype.computeSize = function (out) {
             const size = origComputeSize ? origComputeSize.apply(this, arguments) : [240, 120];
@@ -63,12 +63,19 @@ function setupAutoListNode(node) {
     node._bsaiAutoListState = {
         total: 0,
         buttonRects: [],
+        suppressReset: false,  // Guard to prevent index reset during programmatic updates
+        lastScript: "",       // Track last script value to detect real changes
+        lastMode: "",         // Track last mode value to detect real changes
     };
 
-    // Draw custom UI after standard widgets
-    const origDraw = node.onDrawForeground;
+    // Initialize tracked values
+    node._bsaiAutoListState.lastScript = node._bsai_scriptWidget?.value || "";
+    node._bsaiAutoListState.lastMode = node._bsai_modeWidget?.value || "";
+
+    // Draw custom UI at the bottom of the node
+    const origDrawForeground = node.onDrawForeground;
     node.onDrawForeground = function (ctx) {
-        if (origDraw) origDraw.apply(this, arguments);
+        if (origDrawForeground) origDrawForeground.apply(this, arguments);
         drawCustomUI(ctx, this);
     };
 
@@ -85,12 +92,15 @@ function setupAutoListNode(node) {
         const origCallback = node._bsai_scriptWidget.callback;
         node._bsai_scriptWidget.callback = function (v) {
             if (origCallback) origCallback.call(this, v);
-            updateTotal(node);
-            // Reset index to 1 when script changes
-            if (node._bsai_indexWidget) {
-                node._bsai_indexWidget.value = 1;
-                if (node._bsai_indexWidget.callback) {
-                    node._bsai_indexWidget.callback(1);
+            const state = node._bsaiAutoListState;
+            if (!state) return;
+
+            // Only reset index if script actually changed
+            if (v !== state.lastScript) {
+                state.lastScript = v;
+                updateTotal(node);
+                if (!state.suppressReset && node._bsai_indexWidget) {
+                    node._bsai_indexWidget.value = 1;
                 }
             }
             node.setDirtyCanvas(true, true);
@@ -102,14 +112,27 @@ function setupAutoListNode(node) {
         const origModeCallback = node._bsai_modeWidget.callback;
         node._bsai_modeWidget.callback = function (v) {
             if (origModeCallback) origModeCallback.call(this, v);
-            updateTotal(node);
-            // Reset index to 1 when mode changes
-            if (node._bsai_indexWidget) {
-                node._bsai_indexWidget.value = 1;
-                if (node._bsai_indexWidget.callback) {
-                    node._bsai_indexWidget.callback(1);
+            const state = node._bsaiAutoListState;
+            if (!state) return;
+
+            // Only reset index if mode actually changed
+            if (v !== state.lastMode) {
+                state.lastMode = v;
+                updateTotal(node);
+                if (!state.suppressReset && node._bsai_indexWidget) {
+                    node._bsai_indexWidget.value = 1;
                 }
             }
+            node.setDirtyCanvas(true, true);
+        };
+    }
+
+    // Override index widget callback to prevent unwanted resets
+    if (node._bsai_indexWidget) {
+        const origIndexCallback = node._bsai_indexWidget.callback;
+        node._bsai_indexWidget.callback = function (v) {
+            // Just call original callback, don't trigger any resets
+            if (origIndexCallback) origIndexCallback.call(this, v);
             node.setDirtyCanvas(true, true);
         };
     }
@@ -122,6 +145,12 @@ function setupAutoListNode(node) {
     }, 50);
 }
 
+function isInCustomUIArea(node, pos) {
+    const [, my] = pos;
+    const nodeHeight = node.size[1];
+    return my >= nodeHeight - EXTRA_UI_HEIGHT;
+}
+
 function updateTotal(node) {
     const state = node._bsaiAutoListState;
     if (!state) return;
@@ -132,24 +161,18 @@ function updateTotal(node) {
         return;
     }
 
-    // Count all @图N references in the script
-    // For ByType node with a specific mode, count only matching type
     const mode = node._bsai_modeWidget?.value || "";
     const isByType = node._bsai_modeWidget != null;
 
     if (isByType && mode) {
-        // Parse sections and count by type
         state.total = countAssetsByMode(scriptText, mode);
     } else {
-        // Count all @图N in character/prop/scene sections
         const matches = scriptText.match(/@图\d+/g);
         state.total = matches ? matches.length : 0;
     }
 }
 
 function countAssetsByMode(scriptText, mode) {
-    // Count assets based on the selected mode
-    // mode values match the dropdown options
     if (mode.includes("仅角色") || mode.includes("Characters")) {
         return countAssetsInSection(scriptText, "角色档案");
     } else if (mode.includes("仅道具") || mode.includes("Props")) {
@@ -157,7 +180,6 @@ function countAssetsByMode(scriptText, mode) {
     } else if (mode.includes("仅场景") || mode.includes("Scenes")) {
         return countAssetsInSection(scriptText, "场景档案");
     } else {
-        // Auto mode: count all three sections
         return (
             countAssetsInSection(scriptText, "角色档案") +
             countAssetsInSection(scriptText, "道具档案") +
@@ -183,20 +205,23 @@ function drawCustomUI(ctx, node) {
     const state = node._bsaiAutoListState;
     if (!state) return;
 
-    // Calculate position: just below the last widget
-    const widgetY = getWidgetsBottom(node);
     const width = node.size[0];
+    const nodeHeight = node.size[1];
 
-    const infoY = widgetY + 6;
-    const btnY = infoY + 28;
+    // Custom UI area at the bottom of the node
+    const areaTop = nodeHeight - EXTRA_UI_HEIGHT;
 
-    // Draw separator line
+    const infoY = areaTop + 4;
+    const btnY = areaTop + 26;
+    const btnHeight = 22;
+
+    // Separator line at top of custom area
     ctx.save();
-    ctx.strokeStyle = "rgba(255,255,255,0.1)";
+    ctx.strokeStyle = "rgba(255,255,255,0.12)";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(8, widgetY + 2);
-    ctx.lineTo(width - 8, widgetY + 2);
+    ctx.moveTo(8, areaTop);
+    ctx.lineTo(width - 8, areaTop);
     ctx.stroke();
 
     // Info text
@@ -217,13 +242,13 @@ function drawCustomUI(ctx, node) {
 
     // Buttons
     const btnWidth = (width - 24) / 3;
-    const btnHeight = 22;
     const buttons = [
         { label: "◀ 上一个", x: 8, action: "prev" },
         { label: "重置 Reset", x: 12 + btnWidth, action: "reset" },
         { label: "下一个 ▶", x: 16 + btnWidth * 2, action: "next" },
     ];
 
+    // Store button rects in node-local coordinates
     state.buttonRects = buttons.map(b => ({
         action: b.action,
         x: b.x,
@@ -233,7 +258,6 @@ function drawCustomUI(ctx, node) {
     }));
 
     buttons.forEach(b => {
-        // Button background
         ctx.fillStyle = "#2a3a5a";
         ctx.strokeStyle = "#4a6a9a";
         ctx.lineWidth = 1;
@@ -241,7 +265,6 @@ function drawCustomUI(ctx, node) {
         ctx.fill();
         ctx.stroke();
 
-        // Button text
         ctx.fillStyle = "#cde";
         ctx.font = "11px sans-serif";
         ctx.textAlign = "center";
@@ -252,34 +275,12 @@ function drawCustomUI(ctx, node) {
     ctx.restore();
 }
 
-function getWidgetsBottom(node) {
-    // Calculate the Y position just below the last widget
-    let y = LiteGraph.NODE_TITLE_HEIGHT + 8;
-    for (const w of node.widgets) {
-        if (w.name === "asset_list_info" || w.name === "asset_list_buttons") continue;
-        const h = w.computeSize ? w.computeSize(node.size[0])[1] : 20;
-        y += h + 4;
-    }
-    return y;
-}
-
-function roundRect(ctx, x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + w - r, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-    ctx.lineTo(x + w, y + h - r);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    ctx.lineTo(x + r, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
-    ctx.closePath();
-}
-
 function handleMouseDown(node, pos) {
     const state = node._bsaiAutoListState;
     if (!state || !state.buttonRects) return false;
+
+    // Only check if click is within the bottom custom UI area
+    if (!isInCustomUIArea(node, pos)) return false;
 
     const [mx, my] = pos;
 
@@ -300,6 +301,20 @@ function handleMouseDown(node, pos) {
     return false;
 }
 
+function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+}
+
 function incrementIndex(node, delta = 1) {
     const state = node._bsaiAutoListState;
     if (!state || !node._bsai_indexWidget) return;
@@ -309,23 +324,25 @@ function incrementIndex(node, delta = 1) {
 
     let next = current + delta;
     if (total > 0) {
-        // Wrap around
         if (next > total) next = 1;
         if (next < 1) next = total;
     } else {
         next = Math.max(1, next);
     }
 
+    // Set the suppress flag to prevent any callback from resetting index
+    state.suppressReset = true;
     node._bsai_indexWidget.value = next;
-    if (node._bsai_indexWidget.callback) {
-        node._bsai_indexWidget.callback(next);
-    }
+    // Don't call the index widget's callback to avoid triggering cascading resets
+    // Just update the canvas directly
+    state.suppressReset = false;
 }
 
 function resetIndex(node) {
-    if (!node._bsai_indexWidget) return;
+    const state = node._bsaiAutoListState;
+    if (!state || !node._bsai_indexWidget) return;
+
+    state.suppressReset = true;
     node._bsai_indexWidget.value = 1;
-    if (node._bsai_indexWidget.callback) {
-        node._bsai_indexWidget.callback(1);
-    }
+    state.suppressReset = false;
 }
