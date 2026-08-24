@@ -13,8 +13,8 @@ const TARGET_NODES = new Set([
     "BSAI_AssetLibraryAutoListByType",
 ]);
 
-// Extra height needed at bottom for custom UI (info line + buttons + padding)
-const EXTRA_UI_HEIGHT = 56; // 20 info + 24 buttons + 12 padding
+// Extra height needed at bottom for custom UI (separator + info + buttons + padding)
+const EXTRA_UI_HEIGHT = 80; // 4 separator gap + 18 info + 8 gap + 26 buttons + 12 padding + 12 top gap
 
 app.registerExtension({
     name: "BSAI.AssetLibraryAutoList",
@@ -211,17 +211,24 @@ function drawCustomUI(ctx, node) {
     // Custom UI area at the bottom of the node
     const areaTop = nodeHeight - EXTRA_UI_HEIGHT;
 
-    const infoY = areaTop + 4;
-    const btnY = areaTop + 26;
-    const btnHeight = 22;
+    // Layout: separator → info text → buttons → bottom padding
+    const sepY = areaTop + 8;        // separator line
+    const infoY = areaTop + 16;     // info text
+    const btnY = areaTop + 42;       // buttons
+    const btnHeight = 24;
 
-    // Separator line at top of custom area
     ctx.save();
-    ctx.strokeStyle = "rgba(255,255,255,0.12)";
+
+    // Draw a subtle background panel for the custom UI area
+    ctx.fillStyle = "rgba(20, 28, 40, 0.6)";
+    ctx.fillRect(0, areaTop, width, EXTRA_UI_HEIGHT);
+
+    // Separator line
+    ctx.strokeStyle = "rgba(255,255,255,0.15)";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(8, areaTop);
-    ctx.lineTo(width - 8, areaTop);
+    ctx.moveTo(8, sepY);
+    ctx.lineTo(width - 8, sepY);
     ctx.stroke();
 
     // Info text
@@ -234,8 +241,8 @@ function drawCustomUI(ctx, node) {
         infoText = "等待脚本输入 ｜ Waiting for script...";
     }
 
-    ctx.fillStyle = "#8ac";
-    ctx.font = "11px sans-serif";
+    ctx.fillStyle = "#9bc";
+    ctx.font = "bold 11px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
     ctx.fillText(infoText, width / 2, infoY);
@@ -259,13 +266,13 @@ function drawCustomUI(ctx, node) {
 
     buttons.forEach(b => {
         ctx.fillStyle = "#2a3a5a";
-        ctx.strokeStyle = "#4a6a9a";
+        ctx.strokeStyle = "#5a7aaa";
         ctx.lineWidth = 1;
-        roundRect(ctx, b.x, btnY, btnWidth, btnHeight, 3);
+        roundRect(ctx, b.x, btnY, btnWidth, btnHeight, 4);
         ctx.fill();
         ctx.stroke();
 
-        ctx.fillStyle = "#cde";
+        ctx.fillStyle = "#dde";
         ctx.font = "11px sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
