@@ -87,13 +87,18 @@ def filter_assets_by_mode(assets, mode):
     """
     Filter assets by mode and return the filtered list.
 
-    mode: "auto" | "character" | "prop" | "scene"
+    mode: "auto" | "character" | "prop" | "scene" | "by_index"
     "auto" returns all assets in character → prop → scene order (sorted by @图N index within each type)
+    "by_index" returns all assets sorted globally by @图N index (character/prop/scene mixed by number)
     """
     if not assets:
         return []
 
-    if mode == "auto":
+    if mode == "by_index":
+        # Global @图N order: sort ALL assets (characters/props/scenes mixed) by numeric index
+        result = sorted(assets, key=lambda a: a["index"])
+        return result
+    elif mode == "auto":
         # Preserve character → prop → scene order, sorted by index within each type
         result = []
         for t in ["角色", "道具", "场景"]:
@@ -176,8 +181,9 @@ class BSAI_AssetLibraryAutoListByType:
     """
     Auto-extract @图N asset descriptions by type (character/prop/scene) from a BSAI storyboard script.
 
-    3 modes: Auto Sequence, Characters Only, Props Only, Scenes Only.
+    5 modes: Auto Sequence, By @图N Order, Characters Only, Props Only, Scenes Only.
     In Auto mode, outputs all characters first, then all props, then all scenes.
+    In By @图N Order mode, outputs all assets mixed, sorted globally by @图N number.
     The frontend auto-increments the index after each execution.
     """
 
@@ -185,10 +191,11 @@ class BSAI_AssetLibraryAutoListByType:
     RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING", "INT", "INT", "STRING")
     RETURN_NAMES = ("text", "description", "asset_type", "asset_tag", "index", "total", "mode")
     FUNCTION = "extract_asset"
-    DESCRIPTION = "Extract @图N assets by type: Auto sequence / Characters / Props / Scenes. / 按类型提取@图N资产：自动顺序/角色/道具/场景。"
+    DESCRIPTION = "Extract @图N assets by type: Auto sequence / By @图N order / Characters / Props / Scenes. / 按类型提取@图N资产：自动顺序/按@图N顺序/角色/道具/场景。"
 
     MODE_OPTIONS = [
         "自动顺序 / Auto Sequence",
+        "按@图N顺序 / By @图N Order",
         "仅角色 / Characters Only",
         "仅道具 / Props Only",
         "仅场景 / Scenes Only",
@@ -205,7 +212,7 @@ class BSAI_AssetLibraryAutoListByType:
                 }),
                 "mode": (cls.MODE_OPTIONS, {
                     "default": "自动顺序 / Auto Sequence",
-                    "tooltip": "Output mode: Auto sequence (character→prop→scene), or filter by type.\n输出模式：自动顺序（角色→道具→场景），或按类型筛选。",
+                    "tooltip": "Output mode: Auto sequence (character→prop→scene), By @图N order (global index), or filter by type.\n输出模式：自动顺序（角色→道具→场景）、按@图N顺序（全局编号），或按类型筛选。",
                 }),
                 "index": ("INT", {
                     "default": 1,
@@ -222,7 +229,9 @@ class BSAI_AssetLibraryAutoListByType:
 
         # Map display mode to internal mode key
         mode_key = "auto"
-        if mode == "仅角色 / Characters Only":
+        if mode == "按@图N顺序 / By @图N Order":
+            mode_key = "by_index"
+        elif mode == "仅角色 / Characters Only":
             mode_key = "character"
         elif mode == "仅道具 / Props Only":
             mode_key = "prop"

@@ -72,15 +72,15 @@ Search for "BSAI Asset Library Auto List" in ComfyUI Manager and install it.
 
 **Category | 分类:** `BSAI / Asset Library`
 
-Extract assets filtered by type. Auto-sequence mode outputs all characters first, then all props, then all scenes.
-按类型筛选提取资产。自动顺序模式先输出所有角色，再输出所有道具，最后输出所有场景。
+Extract assets filtered by type. Auto-sequence mode outputs all characters first, then all props, then all scenes. By @图N Order mode outputs all assets mixed, sorted globally by @图N number.
+按类型筛选提取资产。自动顺序模式先输出所有角色，再输出所有道具，最后输出所有场景。按@图N顺序模式将全部资产混合，按@图N编号全局排序输出。
 
 #### Inputs | 输入
 
 | Name | 名称 | Type | Description | 说明 |
 |------|------|------|-------------|------|
 | `script_text` | 分镜脚本 | STRING (multiline) | BSAI-format storyboard script with `[角色档案]` / `[道具档案]` / `[场景档案]` sections | BSAI 格式分镜脚本，包含角色档案/道具档案/场景档案章节 |
-| `mode` | 输出模式 | COMBO | Output mode: Auto Sequence / Characters Only / Props Only / Scenes Only | 输出模式：自动顺序 / 仅角色 / 仅道具 / 仅场景 |
+| `mode` | 输出模式 | COMBO | Output mode: Auto Sequence / By @图N Order / Characters Only / Props Only / Scenes Only | 输出模式：自动顺序 / 按@图N顺序 / 仅角色 / 仅道具 / 仅场景 |
 | `index` | 索引 | INT | Current asset index within the filtered set (1-based). Auto-increments after each run. | 当前过滤集合内的资产索引，每次运行后自动递增 |
 
 #### Outputs | 输出
@@ -100,6 +100,7 @@ Extract assets filtered by type. Auto-sequence mode outputs all characters first
 | Mode | 模式 | Behavior | 行为 |
 |------|------|----------|------|
 | 自动顺序 / Auto Sequence | Default. Outputs all characters → all props → all scenes. Index auto-increments within the full sequence. | 默认。角色全部 → 道具全部 → 场景全部，索引在完整序列中自动递增。 |
+| 按@图N顺序 / By @图N Order | Outputs ALL assets (characters / props / scenes) mixed, sorted globally by @图N number (1, 2, 3, ...). Index auto-increments within the full sequence. | 将角色/道具/场景全部资产混合，按@图N编号（1、2、3…）全局升序输出，索引在完整序列中自动递增。 |
 | 仅角色 / Characters Only | Only output assets from [角色档案] section | 只输出角色档案中的资产 |
 | 仅道具 / Props Only | Only output assets from [道具档案] section | 只输出道具档案中的资产 |
 | 仅场景 / Scenes Only | Only output assets from [场景档案] section | 只输出场景档案中的资产 |
@@ -186,6 +187,10 @@ The example includes a complete storyboard script with 8 assets (2 characters + 
 ---
 
 ## Changelog | 更新日志
+
+### v1.2.0 (2026-09-16)
+- New mode: By @图N Order — output all assets (characters/props/scenes) mixed, sorted globally by @图N number | 新增模式：按@图N顺序——角色/道具/场景全部资产混合，按@图N编号全局排序输出
+- Frontend total counter and backend filter both support the new mode | 前端总数统计与后端过滤逻辑同步支持新模式
 
 ### v1.1.0 (2026-08-24)
 - New node: BSAI Asset Library By Type | 新增节点：按类型提取资产

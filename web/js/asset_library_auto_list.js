@@ -173,7 +173,14 @@ function updateTotal(node) {
 }
 
 function countAssetsByMode(scriptText, mode) {
-    if (mode.includes("仅角色") || mode.includes("Characters")) {
+    if (mode.includes("按@图N顺序") || mode.includes("@图N Order")) {
+        // By @图N order: all characters + props + scenes, sorted globally by index
+        return (
+            countAssetsInSection(scriptText, "角色档案") +
+            countAssetsInSection(scriptText, "道具档案") +
+            countAssetsInSection(scriptText, "场景档案")
+        );
+    } else if (mode.includes("仅角色") || mode.includes("Characters")) {
         return countAssetsInSection(scriptText, "角色档案");
     } else if (mode.includes("仅道具") || mode.includes("Props")) {
         return countAssetsInSection(scriptText, "道具档案");
