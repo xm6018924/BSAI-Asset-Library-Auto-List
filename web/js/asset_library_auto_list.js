@@ -242,9 +242,9 @@ function drawCustomUI(ctx, node) {
     const total = state.total || 0;
     let infoText;
     if (total > 0) {
-        infoText = `资产 ${current} / ${total}  ｜  Asset ${current} of ${total}`;
+        infoText = `Asset ${current} of ${total}`;
     } else {
-        infoText = "等待脚本输入 ｜ Waiting for script...";
+        infoText = "Waiting for script...";
     }
 
     ctx.fillStyle = "#9bc";
@@ -256,9 +256,9 @@ function drawCustomUI(ctx, node) {
     // Buttons
     const btnWidth = (width - 24) / 3;
     const buttons = [
-        { label: "◀ 上一个", x: 8, action: "prev" },
-        { label: "重置 Reset", x: 12 + btnWidth, action: "reset" },
-        { label: "下一个 ▶", x: 16 + btnWidth * 2, action: "next" },
+        { label: "◀ Prev", x: 8, action: "prev" },
+        { label: "Reset", x: 12 + btnWidth, action: "reset" },
+        { label: "Next ▶", x: 16 + btnWidth * 2, action: "next" },
     ];
 
     // Store button rects in node-local coordinates

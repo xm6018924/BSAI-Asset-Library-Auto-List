@@ -135,7 +135,7 @@ class BSAI_AssetLibraryAutoList:
     RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING", "INT", "INT")
     RETURN_NAMES = ("text", "description", "asset_type", "asset_tag", "index", "total")
     FUNCTION = "extract_asset"
-    DESCRIPTION = "Auto-extract @图N asset descriptions from a BSAI storyboard script. Click run to cycle through all assets. / 从BSAI分镜脚本中自动提取@图N资产资料，点击运行依次输出。"
+    DESCRIPTION = "Auto-extract @图N asset descriptions from a BSAI storyboard script. Click run to cycle through all assets."
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -144,14 +144,14 @@ class BSAI_AssetLibraryAutoList:
                 "script_text": ("STRING", {
                     "default": "",
                     "multiline": True,
-                    "tooltip": "BSAI format storyboard script with [角色档案]/[道具档案]/[场景档案] sections\nBSAI格式分镜脚本，包含角色档案/道具档案/场景档案章节",
+                    "tooltip": "BSAI format storyboard script with [角色档案]/[道具档案]/[场景档案] sections",
                 }),
                 "index": ("INT", {
                     "default": 1,
                     "min": 1,
                     "max": 9999,
                     "step": 1,
-                    "tooltip": "Current asset index (1-based). Auto-increments after each run.\n当前资产索引，每次运行后自动递增。",
+                    "tooltip": "Current asset index (1-based). Auto-increments after each run.",
                 }),
             },
         }
@@ -191,14 +191,14 @@ class BSAI_AssetLibraryAutoListByType:
     RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING", "INT", "INT", "STRING")
     RETURN_NAMES = ("text", "description", "asset_type", "asset_tag", "index", "total", "mode")
     FUNCTION = "extract_asset"
-    DESCRIPTION = "Extract @图N assets by type: Auto sequence / By @图N order / Characters / Props / Scenes. / 按类型提取@图N资产：自动顺序/按@图N顺序/角色/道具/场景。"
+    DESCRIPTION = "Extract @图N assets by type: Auto sequence / By @图N order / Characters / Props / Scenes."
 
     MODE_OPTIONS = [
-        "自动顺序 / Auto Sequence",
-        "按@图N顺序 / By @图N Order",
-        "仅角色 / Characters Only",
-        "仅道具 / Props Only",
-        "仅场景 / Scenes Only",
+        "Auto Sequence",
+        "By @图N Order",
+        "Characters Only",
+        "Props Only",
+        "Scenes Only",
     ]
 
     @classmethod
@@ -208,34 +208,34 @@ class BSAI_AssetLibraryAutoListByType:
                 "script_text": ("STRING", {
                     "default": "",
                     "multiline": True,
-                    "tooltip": "BSAI format storyboard script with [角色档案]/[道具档案]/[场景档案] sections\nBSAI格式分镜脚本，包含角色档案/道具档案/场景档案章节",
+                    "tooltip": "BSAI format storyboard script with [角色档案]/[道具档案]/[场景档案] sections",
                 }),
                 "mode": (cls.MODE_OPTIONS, {
-                    "default": "自动顺序 / Auto Sequence",
-                    "tooltip": "Output mode: Auto sequence (character→prop→scene), By @图N order (global index), or filter by type.\n输出模式：自动顺序（角色→道具→场景）、按@图N顺序（全局编号），或按类型筛选。",
+                    "default": "Auto Sequence",
+                    "tooltip": "Output mode: Auto sequence (character→prop→scene), By @图N order (global index), or filter by type.",
                 }),
                 "index": ("INT", {
                     "default": 1,
                     "min": 1,
                     "max": 9999,
                     "step": 1,
-                    "tooltip": "Current asset index within the filtered set (1-based). Auto-increments after each run.\n当前过滤集合内的资产索引，每次运行后自动递增。",
+                    "tooltip": "Current asset index within the filtered set (1-based). Auto-increments after each run.",
                 }),
             },
         }
 
-    def extract_asset(self, script_text="", mode="自动顺序 / Auto Sequence", index=1):
+    def extract_asset(self, script_text="", mode="Auto Sequence", index=1):
         assets = parse_assets_from_script(script_text)
 
         # Map display mode to internal mode key
         mode_key = "auto"
-        if mode == "按@图N顺序 / By @图N Order":
+        if mode == "By @图N Order":
             mode_key = "by_index"
-        elif mode == "仅角色 / Characters Only":
+        elif mode == "Characters Only":
             mode_key = "character"
-        elif mode == "仅道具 / Props Only":
+        elif mode == "Props Only":
             mode_key = "prop"
-        elif mode == "仅场景 / Scenes Only":
+        elif mode == "Scenes Only":
             mode_key = "scene"
 
         filtered = filter_assets_by_mode(assets, mode_key)
