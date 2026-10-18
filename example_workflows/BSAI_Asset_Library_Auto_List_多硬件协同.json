@@ -56,7 +56,7 @@
         "[角色档案]\n@图1 林夏：28岁女程序员，齐耳短发，米色风衣，神情专注\n[道具档案]\n@图2 复古机械键盘，青轴，金属面板\n[场景档案]\n@图3 雨夜霓虹街角，潮湿路面反光，王家卫式光影",
         1
       ],
-      "title": "资产库自动列表 (按@图N依次提取资产描述)"
+      "title": "Asset Library Auto List (cycle through tagged assets in order)"
     },
     {
       "id": 2,
@@ -115,10 +115,10 @@
       },
       "widgets_values": [
         "[角色档案]\n@图1 林夏：28岁女程序员，齐耳短发，米色风衣\n[道具档案]\n@图2 复古机械键盘\n[场景档案]\n@图3 雨夜霓虹街角",
-        "自动顺序 / Auto Sequence",
+        "Auto Sequence",
         1
       ],
-      "title": "按类型提取资产 (角色→道具→场景)"
+      "title": "Asset Library By Type (characters → props → scenes)"
     },
     {
       "id": 3,
@@ -166,7 +166,7 @@
       "widgets_values": [
         "sd_xl_base_1.0.safetensors"
       ],
-      "title": "CUDA 基础生成模型 (NVIDIA RTX 5090)"
+      "title": "CUDA Base Model (NVIDIA RTX 5090)"
     },
     {
       "id": 4,
@@ -205,7 +205,7 @@
       "widgets_values": [
         "A cinematic shot of a futuristic city street at night, neon lights, film grain, 4K"
       ],
-      "title": "正向提示"
+      "title": "Positive Prompt"
     },
     {
       "id": 5,
@@ -244,7 +244,7 @@
       "widgets_values": [
         "blurry, low quality, distorted, watermark"
       ],
-      "title": "负向提示"
+      "title": "Negative Prompt"
     },
     {
       "id": 6,
@@ -327,7 +327,7 @@
         2500,
         750
       ],
-      "title": "CPU 编排门 (按显存水位决策 VAE 分流)"
+      "title": "CPU Orchestrator Gate (VAE routing by VRAM headroom)"
     },
     {
       "id": 8,
@@ -387,7 +387,7 @@
         "normal",
         1.0
       ],
-      "title": "KSampler (CUDA 采样)"
+      "title": "KSampler (CUDA)"
     },
     {
       "id": 9,
@@ -431,7 +431,7 @@
         "auto",
         2500
       ],
-      "title": "VAE 解码路由 (auto→XPU 8190 worker)"
+      "title": "VAE Decode Router (auto → XPU 8190 worker)"
     },
     {
       "id": 10,
@@ -460,9 +460,9 @@
         "cnr_id": "comfy-core"
       },
       "widgets_values": [
-        "BSAI_AssetLibrary_多硬件协同"
+        "BSAI_AssetLibrary_MultiHardware"
       ],
-      "title": "解码输出"
+      "title": "Decoded Output"
     },
     {
       "id": 11,
@@ -497,7 +497,7 @@
         "face_ref_input.png",
         "image"
       ],
-      "title": "参考帧 (NPU 前置检测)"
+      "title": "Reference Frame (NPU pre-detect)"
     },
     {
       "id": 12,
@@ -575,7 +575,7 @@
         "gaussian",
         "per_frame"
       ],
-      "title": "NPU 人脸检测 (Intel AI Boost)"
+      "title": "NPU Face Detection (Intel AI Boost)"
     },
     {
       "id": 13,
@@ -606,7 +606,7 @@
       "widgets_values": [
         "BSAI_NPU_FaceTrack_Preview"
       ],
-      "title": "NPU 检测结果"
+      "title": "NPU Detection Result"
     },
     {
       "id": 14,
@@ -637,7 +637,7 @@
         1000,
         true
       ],
-      "title": "多硬件监控 HUD"
+      "title": "Multi-Hardware Monitor HUD"
     },
     {
       "id": 15,
@@ -665,7 +665,7 @@
         "Node name for S&R": "BSAIOrchestratorStatus"
       },
       "widgets_values": [],
-      "title": "编排状态"
+      "title": "Orchestrator Status"
     },
     {
       "id": 16,
@@ -706,7 +706,7 @@
         "Node name for S&R": "BSAINPU_DepthEstimate"
       },
       "widgets_values": [],
-      "title": "NPU 深度估计 (DepthAnything-V2-Small, Intel AI Boost)"
+      "title": "NPU Depth Estimation (DepthAnything-V2-Small, Intel AI Boost)"
     },
     {
       "id": 17,
@@ -747,13 +747,13 @@
         "Node name for S&R": "BSAINPU_LLMGenerate"
       },
       "widgets_values": [
-        "你是 Asset_Library_Auto_List 的硬件协同决策助手：结合当前画面/任务，判断下一步处理优先使用哪块硬件（NPU/CUDA/XPU/CPU），直接给出结论与原因，不超过 50 字，不要输出思考过程。",
+        "You are the hardware co-scheduling assistant for Asset_Library_Auto_List. Based on the current frame/task, decide which hardware (NPU/CUDA/XPU/CPU) should handle the next step. Reply with the decision and reason only, within 50 words, no chain-of-thought.",
         128,
         0.7,
         0.9,
         false
       ],
-      "title": "NPU LLM 决策文本 (Qwen3-4B 对称INT4, Intel AI Boost)"
+      "title": "NPU LLM Decision Text (Qwen3-4B INT4, Intel AI Boost)"
     },
     {
       "id": 18,
@@ -781,7 +781,7 @@
         "Node name for S&R": "ShowText"
       },
       "widgets_values": [],
-      "title": "NPU LLM 决策输出"
+      "title": "NPU LLM Decision Output"
     }
   ],
   "links": [

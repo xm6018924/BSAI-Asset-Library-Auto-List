@@ -135,7 +135,7 @@ class BSAI_AssetLibraryAutoList:
     RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING", "INT", "INT")
     RETURN_NAMES = ("text", "description", "asset_type", "asset_tag", "index", "total")
     FUNCTION = "extract_asset"
-    DESCRIPTION = "Auto-extract @图N asset descriptions from a BSAI storyboard script. Click run to cycle through all assets."
+    DESCRIPTION = "Auto-extract tagged asset descriptions from a BSAI-format storyboard script. Click run to cycle through all assets."
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -144,7 +144,7 @@ class BSAI_AssetLibraryAutoList:
                 "script_text": ("STRING", {
                     "default": "",
                     "multiline": True,
-                    "tooltip": "BSAI format storyboard script with [角色档案]/[道具档案]/[场景档案] sections",
+                    "tooltip": "BSAI-format storyboard script: bracketed Chinese section headers (characters / props / scenes) and one tagged asset per line.",
                 }),
                 "index": ("INT", {
                     "default": 1,
@@ -181,9 +181,9 @@ class BSAI_AssetLibraryAutoListByType:
     """
     Auto-extract @图N asset descriptions by type (character/prop/scene) from a BSAI storyboard script.
 
-    5 modes: Auto Sequence, By @图N Order, Characters Only, Props Only, Scenes Only.
+    5 modes: Auto Sequence, By Tag Order, Characters Only, Props Only, Scenes Only.
     In Auto mode, outputs all characters first, then all props, then all scenes.
-    In By @图N Order mode, outputs all assets mixed, sorted globally by @图N number.
+    In By Tag Order mode, outputs all assets mixed, sorted globally by tag number.
     The frontend auto-increments the index after each execution.
     """
 
@@ -191,11 +191,11 @@ class BSAI_AssetLibraryAutoListByType:
     RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING", "INT", "INT", "STRING")
     RETURN_NAMES = ("text", "description", "asset_type", "asset_tag", "index", "total", "mode")
     FUNCTION = "extract_asset"
-    DESCRIPTION = "Extract @图N assets by type: Auto sequence / By @图N order / Characters / Props / Scenes."
+    DESCRIPTION = "Extract assets by type: Auto sequence / By tag order / Characters / Props / Scenes."
 
     MODE_OPTIONS = [
         "Auto Sequence",
-        "By @图N Order",
+        "By Tag Order",
         "Characters Only",
         "Props Only",
         "Scenes Only",
@@ -208,11 +208,11 @@ class BSAI_AssetLibraryAutoListByType:
                 "script_text": ("STRING", {
                     "default": "",
                     "multiline": True,
-                    "tooltip": "BSAI format storyboard script with [角色档案]/[道具档案]/[场景档案] sections",
+                    "tooltip": "BSAI-format storyboard script: bracketed Chinese section headers (characters / props / scenes) and one tagged asset per line.",
                 }),
                 "mode": (cls.MODE_OPTIONS, {
                     "default": "Auto Sequence",
-                    "tooltip": "Output mode: Auto sequence (character→prop→scene), By @图N order (global index), or filter by type.",
+                    "tooltip": "Output mode: Auto sequence (character→prop→scene), By tag order (global index), or filter by type.",
                 }),
                 "index": ("INT", {
                     "default": 1,
@@ -229,7 +229,7 @@ class BSAI_AssetLibraryAutoListByType:
 
         # Map display mode to internal mode key
         mode_key = "auto"
-        if mode == "By @图N Order":
+        if mode == "By Tag Order":
             mode_key = "by_index"
         elif mode == "Characters Only":
             mode_key = "character"
@@ -265,6 +265,6 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "BSAI_AssetLibraryAutoList": "BSAI Asset Library Auto List | 资产库自动列表",
-    "BSAI_AssetLibraryAutoListByType": "BSAI Asset Library By Type | 按类型提取资产",
+    "BSAI_AssetLibraryAutoList": "BSAI Asset Library Auto List",
+    "BSAI_AssetLibraryAutoListByType": "BSAI Asset Library By Type",
 }

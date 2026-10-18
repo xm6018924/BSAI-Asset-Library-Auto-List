@@ -81,12 +81,12 @@
       "mode": 0,
       "inputs": [],
       "outputs": [],
-      "title": "BSAI Asset Library Auto List | 使用说明",
+      "title": "BSAI Asset Library Auto List | Instructions",
       "properties": {
         "Node name for S&R": "Note"
       },
       "widgets_values": [
-        "BSAI 资产库自动列表节点\n\n使用方法：\n1. 节点内置了示例脚本，可直接点击「运行」测试\n2. 每次运行自动输出下一个 @图N 资产的文字资料\n3. 运行完成后索引自动+1，到达末尾循环回到第一个\n4. 节点底部按钮：◀ 上一个 ｜ 重置 Reset ｜ 下一个 ▶\n5. 输出端口：text(完整文本) / description(描述) / asset_type(类型) / asset_tag(@图N) / index(当前) / total(总数)\n6. 将 text 输出连接到需要资产描述的节点即可使用"
+        "BSAI Asset Library Auto List\n\nUsage:\n1. A sample script is built in; click Run to test immediately.\n2. Each run outputs the text of the next tagged asset.\n3. After each run the index auto-increments and loops back to the first asset.\n4. Buttons below the node: Prev ◀ ｜ Reset ｜ Next ▶\n5. Outputs: text (full line) / description / asset_type / asset_tag / index (current) / total\n6. Connect the text output to any node that needs an asset description."
       ]
     }
   ],
