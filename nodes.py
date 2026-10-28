@@ -193,18 +193,12 @@ class BSAI_AssetLibraryAutoListByType:
     FUNCTION = "extract_asset"
     DESCRIPTION = "Extract assets by type: Auto sequence / By tag order / Characters / Props / Scenes."
 
-    # 后 5 项为旧版双语标签: 兼容老工作流 JSON 保存的值, extract_asset 内统一映射
     MODE_OPTIONS = [
         "Auto Sequence",
         "By Tag Order",
         "Characters Only",
         "Props Only",
         "Scenes Only",
-        "自动顺序 / Auto Sequence",
-        "按@图N顺序 / By @图N Order",
-        "仅角色 / Characters Only",
-        "仅道具 / Props Only",
-        "仅场景 / Scenes Only",
     ]
 
     # 旧双语标签 -> 内部 mode key (与下方英文分支等价)
