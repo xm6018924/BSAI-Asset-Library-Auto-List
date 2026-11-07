@@ -201,13 +201,55 @@ class BSAI_AssetLibraryAutoListByType:
         "Scenes Only",
     ]
 
-    # 旧双语标签 -> 内部 mode key (与下方英文分支等价)
-    _LEGACY_MODE_MAP = {
-        "按@图N顺序 / By @图N Order": "by_index",
-        "仅角色 / Characters Only": "character",
-        "仅道具 / Props Only": "prop",
-        "仅场景 / Scenes Only": "scene",
+    # 旧版双语标签 / 简写标签 -> 规范档位
+    # 旧工作流 JSON 里存的是双语值，下拉选项改成英文后必须先归一，否则
+    # ComfyUI 会在进入 Python 之前就以 "Value not in list" 拒绝整个 prompt。
+    _MODE_ALIASES = {
+        "auto sequence": "Auto Sequence",
+        "自动顺序": "Auto Sequence",
+        "自动": "Auto Sequence",
+        "by tag order": "By Tag Order",
+        "按@图n顺序 / by @图n order": "By Tag Order",
+        "按@图n顺序": "By Tag Order",
+        "按@图顺序 / by @图顺序": "By Tag Order",
+        "by @图n order": "By Tag Order",
+        "characters only": "Characters Only",
+        "仅角色 / characters only": "Characters Only",
+        "仅角色": "Characters Only",
+        "props only": "Props Only",
+        "仅道具 / props only": "Props Only",
+        "仅道具": "Props Only",
+        "scenes only": "Scenes Only",
+        "仅场景 / scenes only": "Scenes Only",
+        "仅场景": "Scenes Only",
     }
+
+    @classmethod
+    def is_known_mode(cls, value):
+        """是否为规范档位或可识别的历史档位写法。"""
+        if not isinstance(value, str):
+            return False
+        if value in cls.MODE_OPTIONS:
+            return True
+        return value.strip().lower() in cls._MODE_ALIASES
+
+    @classmethod
+    def canonical_mode(cls, value):
+        """把历史写法归一为 MODE_OPTIONS 之一；完全无法识别时回落第一档。"""
+        if not isinstance(value, str):
+            return cls.MODE_OPTIONS[0]
+        if value in cls.MODE_OPTIONS:
+            return value
+        return cls._MODE_ALIASES.get(value.strip().lower(), cls.MODE_OPTIONS[0])
+
+    @classmethod
+    def VALIDATE_INPUTS(cls, mode="Auto Sequence"):
+        # 只接管 mode 的取值校验：规范档位与历史双语档位都放行，
+        # 这样旧工作流（含 API 直接提交的 prompt）不会被 ComfyUI 拦在门外。
+        # script_text / index 仍走 ComfyUI 默认校验。
+        if cls.is_known_mode(mode):
+            return True
+        return f"mode 必须是 {cls.MODE_OPTIONS} 之一（也接受历史双语档位）"
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -235,8 +277,9 @@ class BSAI_AssetLibraryAutoListByType:
     def extract_asset(self, script_text="", mode="Auto Sequence", index=1):
         assets = parse_assets_from_script(script_text)
 
-        # Map display mode to internal mode key (兼容旧版双语标签)
-        mode_key = self._LEGACY_MODE_MAP.get(mode, "auto")
+        # 兼容旧版双语标签，统一归一到规范档位
+        mode = self.canonical_mode(mode)
+        mode_key = "auto"
         if mode == "By Tag Order":
             mode_key = "by_index"
         elif mode == "Characters Only":

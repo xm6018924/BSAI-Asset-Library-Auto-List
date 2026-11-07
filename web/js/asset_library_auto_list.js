@@ -15,6 +15,54 @@ const TARGET_NODES = new Set([
     "BSAI_AssetLibraryAutoListByType",
 ]);
 
+// Canonical mode options (must stay in sync with nodes.py MODE_OPTIONS)
+const MODE_OPTIONS = [
+    "Auto Sequence",
+    "By Tag Order",
+    "Characters Only",
+    "Props Only",
+    "Scenes Only",
+];
+
+// Legacy bilingual labels -> canonical option. Widget values saved by older
+// workflows still hold these, and ComfyUI rejects them at prompt validation,
+// so they have to be rewritten at load time.
+const MODE_ALIASES = {
+    "auto sequence": "Auto Sequence",
+    "自动顺序": "Auto Sequence",
+    "自动": "Auto Sequence",
+    "by tag order": "By Tag Order",
+    "按@图n顺序 / by @图n order": "By Tag Order",
+    "按@图n顺序": "By Tag Order",
+    "by @图n order": "By Tag Order",
+    "characters only": "Characters Only",
+    "仅角色 / characters only": "Characters Only",
+    "仅角色": "Characters Only",
+    "props only": "Props Only",
+    "仅道具 / props only": "Props Only",
+    "仅道具": "Props Only",
+    "scenes only": "Scenes Only",
+    "仅场景 / scenes only": "Scenes Only",
+    "仅场景": "Scenes Only",
+};
+
+function canonicalMode(value) {
+    if (typeof value !== "string") return null;
+    if (MODE_OPTIONS.includes(value)) return value;
+    const key = value.trim().toLowerCase();
+    return MODE_ALIASES[key] || null;
+}
+
+function migrateLegacyMode(node) {
+    const widget = node.widgets?.find(w => w.name === "mode");
+    if (!widget) return;
+    const canonical = canonicalMode(widget.value);
+    if (!canonical || canonical === widget.value) return;
+    widget.value = canonical;
+    if (node._bsaiAutoListState) node._bsaiAutoListState.lastMode = canonical;
+    node.setDirtyCanvas(true, true);
+}
+
 // Height of our custom UI area
 const CUSTOM_UI_HEIGHT = 56; // 20 info + 26 buttons + 10 padding
 
@@ -28,6 +76,14 @@ app.registerExtension({
         nodeType.prototype.onNodeCreated = function () {
             if (origOnNodeCreated) origOnNodeCreated.apply(this, arguments);
             setupAutoListNode(this);
+        };
+
+        // A workflow's saved widget values are applied in configure(), after
+        // onNodeCreated, so legacy mode labels are only visible there.
+        const origConfigure = nodeType.prototype.configure;
+        nodeType.prototype.configure = function (info) {
+            if (origConfigure) origConfigure.apply(this, arguments);
+            migrateLegacyMode(this);
         };
 
         // Auto-increment after execution completes
@@ -52,6 +108,8 @@ function setupAutoListNode(node) {
     node._bsai_scriptWidget = node.widgets?.find(w => w.name === "script_text");
     node._bsai_indexWidget = node.widgets?.find(w => w.name === "index");
     node._bsai_modeWidget = node.widgets?.find(w => w.name === "mode");
+
+    migrateLegacyMode(node);
 
     if (node._bsai_indexWidget) {
         if (isNaN(parseInt(node._bsai_indexWidget.value))) {
